@@ -1,0 +1,118 @@
+---
+swagger: "2.0"
+info:
+  description: "This API returns a json, containing a list of app reviews from the\
+    \ Google Play store."
+  version: "1.0.1"
+  title: "Get App Reviews fro the Google Play Store"
+  contact:
+    email: "stanik@informatik.uni-hamburg.de"
+host: api.openreq.eu
+schemes:
+  - https
+paths:
+  /hitec/crawl/app-page/google-play/{package_name}:
+    get:
+      summary: "Get the app page for a specific app."
+      description: "Get the app page for a specific app.\n"
+      operationId: "getAppPageByPackageName"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "package_name"
+        in: "path"
+        description: "the unique package name of the app."
+        required: true
+        type: "string"
+      responses:
+        200:
+          description: "app page."
+        400:
+          description: "bad input parameter or no app page could be retrieved."
+definitions:
+  AppPage:
+    type: "object"
+    properties:
+      name:
+        type: "string"
+        example: "WhatsApp Messenger"
+      package_name:
+        type: "string"
+        example: "com.whatsapp"
+      date_crawled:
+        type: "string"
+        example: "2017-11-22T14:07:29.866407+01:00"
+      category:
+        type: "string"
+        example: "Communication"
+      usk:
+        type: "string"
+        example: "USK: All ages"
+      price:
+        type: "string"
+        example: "free"
+      price_value:
+        type: "number"
+        example: 0
+      price_currency:
+        type: "string"
+        example: "€"
+      description:
+        type: "string"
+        example: "This is a great app"
+      whats_new:
+        type: "string"
+        example: "fixed several bugs"
+      rating:
+        type: "number"
+        example: 4.4000000000000003552713678800500929355621337890625
+      star_count:
+        type: "integer"
+        example: 61050950
+      count_per_rating:
+        $ref: "#/definitions/AppPage_count_per_rating"
+      estimated_download_number:
+        type: "integer"
+        example: 3000000000
+      developer:
+        type: "string"
+        example: "WhatsApp Inc."
+      top_developer:
+        type: "boolean"
+        example: false
+      contains_ads:
+        type: "boolean"
+        example: false
+      in_app_purchase:
+        type: "boolean"
+        example: false
+      last_update:
+        type: "integer"
+        example: 20171027
+      os:
+        type: "string"
+        example: "ANDROID"
+      requires_os_version:
+        type: "string"
+        example: "Varies+"
+      current_software_version:
+        type: "string"
+        example: "Varieswithdevice"
+      similar_apps:
+        type: "array"
+        items:
+          type: "string"
+          example: ""
+  AppPage_count_per_rating:
+    properties:
+      1:
+        type: "integer"
+      2:
+        type: "integer"
+      3:
+        type: "integer"
+      4:
+        type: "integer"
+      5:
+        type: "integer"
+    example: "{\"1\":10,\"2\":100,\"3\":10230,\"4\":100,\"5\":10}"
