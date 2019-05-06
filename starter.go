@@ -1,10 +1,10 @@
 package main
 
 import (
+	"encoding/json"
 	"log"
 	"net/http"
 
-	"encoding/json"
 	"os"
 
 	"github.com/gorilla/mux"
@@ -19,21 +19,26 @@ func main() {
 	log.Fatal(http.ListenAndServe(":9622", router))
 }
 
+func recoverAPICall(w http.ResponseWriter) {
+	if r := recover(); r != nil {
+		log.Println("recovered from ", r)
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(`{"message": "could not retrieve app page"}`)
+	}
+}
+
 func getAppPage(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	defer recoverAPICall(w)
+
 	// get request param
 	params := mux.Vars(r)
 	packageName := params["package_name"]
 
 	// crawl app reviews
 	appPage := Crawl(packageName)
-
-	// write the response
-	w.Header().Set("Content-Type", "application/json")
 	if appPage.Description != "" {
 		w.WriteHeader(http.StatusOK)
 		json.NewEncoder(w).Encode(appPage)
-	} else {
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(`{"message": "could not retrieve app page"}`)
 	}
 }
