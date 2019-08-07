@@ -11,6 +11,7 @@ The response contains all information with respect to that app page in JSON form
 === Which technologies are used
 - Go (-> https://github.com/golang/go)
 - Gorilla Mux (-> https://github.com/gorilla/mux)
+- OlegSchmidt soup, fork of anaskhan96 soup (-> fork : https://github.com/OlegSchmidt/soup | original : https://github.com/anaskhan96/soup)
 
 
 === How to install it
