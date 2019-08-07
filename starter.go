@@ -11,12 +11,15 @@ import (
 )
 
 func main() {
-	log.SetOutput(os.Stdout)
-
-	router := mux.NewRouter()
-	router.HandleFunc("/hitec/crawl/app-page/google-play/{package_name}", getAppPage).Methods("GET")
-
-	log.Fatal(http.ListenAndServe(":9622", router))
+	parameters := os.Args
+	if len(parameters) >= 2 && parameters[len(os.Args)-2] == "local" {
+		Crawl(parameters[len(os.Args)-1], true)
+	} else {
+		log.SetOutput(os.Stdout)
+		router := mux.NewRouter()
+		router.HandleFunc("/hitec/crawl/app-page/google-play/{package_name}", getAppPage).Methods("GET")
+		log.Fatal(http.ListenAndServe(":9622", router))
+	}
 }
 
 func recoverAPICall(w http.ResponseWriter) {
