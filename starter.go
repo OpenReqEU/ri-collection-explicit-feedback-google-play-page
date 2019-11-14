@@ -2,43 +2,47 @@ package main
 
 import (
 	"encoding/json"
+	"github.com/gorilla/mux"
 	"log"
 	"net/http"
+)
 
-	"os"
-
-	"github.com/gorilla/mux"
+const (
+	requestError = "The request could not be recovered"
 )
 
 func main() {
-	log.SetOutput(os.Stdout)
-
 	router := mux.NewRouter()
 	router.HandleFunc("/hitec/crawl/app-page/google-play/{package_name}", getAppPage).Methods("GET")
-
 	log.Fatal(http.ListenAndServe(":9622", router))
 }
 
-func recoverAPICall(w http.ResponseWriter) {
+func recoverAPICall(w http.ResponseWriter, page AppPage) {
 	if r := recover(); r != nil {
-		log.Println("recovered from ", r)
 		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(`{"message": "could not retrieve app page"}`)
+		page.Errors = append(page.Errors, requestError)
 	}
 }
 
 func getAppPage(w http.ResponseWriter, r *http.Request) {
+	appPage := AppPage{}
 	w.Header().Set("Content-Type", "application/json")
-	defer recoverAPICall(w)
+	defer recoverAPICall(w, appPage)
 
 	// get request param
 	params := mux.Vars(r)
 	packageName := params["package_name"]
 
 	// crawl app reviews
-	appPage := Crawl(packageName)
-	if appPage.Description != "" {
-		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(appPage)
-	}
+	appPage = Crawl(packageName)
+	serveResponse(w, appPage, http.StatusOK)
+}
+
+// serves the generated content
+func serveResponse(writer http.ResponseWriter, page AppPage, status int) {
+	writer.Header().Set("Content-Type", "application/json")
+	writer.WriteHeader(status)
+	encoder := json.NewEncoder(writer)
+	encoder.SetEscapeHTML(false)
+	encoder.Encode(page)
 }

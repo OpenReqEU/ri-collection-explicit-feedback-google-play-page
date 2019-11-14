@@ -1,5 +1,10 @@
 package main
 
+import (
+	"strconv"
+	"strings"
+)
+
 // AppPage model
 type AppPage struct {
 	Name                    string             `json:"name" bson:"name"`
@@ -25,6 +30,7 @@ type AppPage struct {
 	RequiresOsVersion       string             `json:"requires_os_version" bson:"requires_os_version"`
 	CurrentSoftwareVersion  string             `json:"current_software_version" bson:"current_software_version"`
 	SimilarApps             []string           `json:"similar_apps" bson:"similar_apps"`
+	Errors                  []string           `json:"errors" bson:"errors"`
 }
 
 // StarCountPerRating model
@@ -34,4 +40,41 @@ type StarCountPerRating struct {
 	Three int `json:"3"`
 	Two   int `json:"2"`
 	One   int `json:"1"`
+}
+
+// style property model
+type AttributeStyle struct {
+	Name  string
+	Value string
+	Unit  string
+}
+
+// fills an object with given definition
+func (style AttributeStyle) fill(definition string) AttributeStyle {
+	definition = strings.TrimSpace(definition)
+	definitionParts := strings.Split(definition, ":")
+	value := definitionParts[1]
+	unit := ""
+	units := [4]string{"%", "px", "rem", "em"}
+	for position := range units {
+		if len(value) > len(strings.Replace(value, units[position], "", -1)) {
+			value = strings.Replace(value, units[position], "", -1)
+			unit = units[position]
+			break
+		}
+	}
+	style.Name = strings.Trim(definitionParts[0], " ")
+	style.Value = strings.TrimSpace(value)
+	style.Unit = unit
+
+	return style
+}
+
+// converts the value of the struct into int and returns it
+func (style AttributeStyle) getValueAsInt() int {
+	valueAsInt, success := strconv.Atoi(style.Value)
+	if success != nil {
+		valueAsInt = 0
+	}
+	return valueAsInt
 }
