@@ -66,18 +66,24 @@ const (
 	valueInAppPurchases                = "Offers in-app purchases"
 	valueRequiresOsVersion             = "Varies with device"
 	valueCurrentSoftwareVersionDefault = "unknown"
+
+	// block types
+	blockTypeAppName    = "appName"
+	blockTypeReview     = "review"
+	blockTypeWhatsNew   = "whats new"
+	blockTypeAdditional = "additional"
+
+	// errors
+	errorPageNotFound = "Page content not found, please update the CSS class in the constant \"classAppPage\""
 )
 
 // Crawl the information available on a app page
-func Crawl(packageName string, arguments ...bool) AppPage {
+func Crawl(packageName string) AppPage {
 	var appPage AppPage
-	if len(arguments) == 0 {
-		arguments = append(arguments, false)
-	}
 
 	document, httpStatus := retrieveDoc(packageName)
 	if httpStatus == http.StatusOK {
-		appPage = crawlAppPage(document, packageName, arguments[0])
+		appPage = crawlAppPage(document, packageName)
 		if appPage.Description == "" && appPage.Name == "" && appPage.DeveloperName == "" {
 			// probably captcha
 		}
@@ -109,7 +115,7 @@ func retrieveDoc(packageName string) (soup.Root, int) {
 }
 
 // crawls the page and fills the struct with values
-func crawlAppPage(document soup.Root, packageName string, debug bool) AppPage {
+func crawlAppPage(document soup.Root, packageName string) AppPage {
 	var lastError error
 	appPage := AppPage{}
 	appPage.DateCrawled = getCurrentDate()
@@ -213,36 +219,6 @@ func crawlAppPage(document soup.Root, packageName string, debug bool) AppPage {
 			appPage.Errors = append(appPage.Errors, appPageDocumentError.Error())
 		}
 	}
-	if debug == true {
-		fmt.Println("\tappPage.Name", " = ", appPage.Name)
-		fmt.Println("\tappPage.PackageName", " = ", appPage.PackageName)
-		fmt.Println("\tappPage.DateCrawled", " = ", appPage.DateCrawled)
-		fmt.Println("\tappPage.Category", " = ", appPage.Category)
-		fmt.Println("\tappPage.USK", " = ", appPage.USK)
-		fmt.Println("\tappPage.Price", " = ", appPage.Price)
-		fmt.Println("\tappPage.PriceValue", " = ", appPage.PriceValue)
-		fmt.Println("\tappPage.PriceCurrency", " = ", appPage.PriceCurrency)
-		fmt.Println("\tappPage.Description", " = ", appPage.Description)
-		fmt.Println("\tappPage.WhatsNew", " = ", appPage.WhatsNew)
-		fmt.Println("\tappPage.Rating", " = ", appPage.Rating)
-		fmt.Println("\tappPage.StarsCount", " = ", appPage.StarsCount)
-		fmt.Println("\tappPage.CountPerRating 5 Star", " = ", appPage.CountPerRating.Five)
-		fmt.Println("\tappPage.CountPerRating 4 Star", " = ", appPage.CountPerRating.Four)
-		fmt.Println("\tappPage.CountPerRating 3 Star", " = ", appPage.CountPerRating.Three)
-		fmt.Println("\tappPage.CountPerRating 2 Star", " = ", appPage.CountPerRating.Two)
-		fmt.Println("\tappPage.CountPerRating 1 Star", " = ", appPage.CountPerRating.One)
-		fmt.Println("\tappPage.EstimatedDownloadNumber", " = ", appPage.EstimatedDownloadNumber)
-		fmt.Println("\tappPage.DeveloperName", " = ", appPage.DeveloperName)
-		fmt.Println("\tappPage.TopDeveloper", " = ", appPage.TopDeveloper)
-		fmt.Println("\tappPage.ContainsAds", " = ", appPage.ContainsAds)
-		fmt.Println("\tappPage.InAppPurchases", " = ", appPage.InAppPurchases)
-		fmt.Println("\tappPage.LastUpdate", " = ", appPage.LastUpdate)
-		fmt.Println("\tappPage.Os", " = ", appPage.Os)
-		fmt.Println("\tappPage.RequiresOsVersion", " = ", appPage.RequiresOsVersion)
-		fmt.Println("\tappPage.CurrentSoftwareVersion", " = ", appPage.CurrentSoftwareVersion)
-		fmt.Println("\tappPage.SimilarApps", " = ", appPage.SimilarApps)
-		fmt.Println("\tappPage.Errors", " = ", appPage.Errors)
-	}
 
 	return appPage
 }
@@ -252,7 +228,7 @@ func getPageDocument(document soup.Root) (soup.Root, error) {
 	pageDom := document.Find(div, class, classAppPage)
 	var pageDomError error = nil
 	if pageDom.Error != nil {
-		pageDomError = errors.New("Page content not found, please update the CSS class in the constant \"classAppPage\"")
+		pageDomError = errors.New(errorPageNotFound)
 	}
 
 	return pageDom, pageDomError
@@ -356,17 +332,17 @@ func getMainInformationBlockSimilarChildren(document soup.Root, property string)
 
 // returns the review information block
 func getMainInformationBlockReview(document soup.Root, property string) (soup.Root, error) {
-	return getMainInformationBlockValidated(document, 0, property, "review")
+	return getMainInformationBlockValidated(document, 0, property, blockTypeReview)
 }
 
 // returns the whats new information block
 func getMainInformationBlockWhatsNew(document soup.Root, property string) (soup.Root, error) {
-	return getMainInformationBlockValidated(document, 1, property, "whats new")
+	return getMainInformationBlockValidated(document, 1, property, blockTypeWhatsNew)
 }
 
 // returns the additional information block
 func getMainInformationBlockAdditional(document soup.Root, property string) (soup.Root, error) {
-	return getMainInformationBlockValidated(document, 2, property, "additional")
+	return getMainInformationBlockValidated(document, 2, property, blockTypeAdditional)
 }
 
 // returns the additional information block children (updated, size, installs etc.)
@@ -407,10 +383,11 @@ func getMainInformationBlockAdditionalChild(document soup.Root, property string,
 
 // returns the name of the app
 func getAppName(document soup.Root) (string, error) {
+	property := "appName"
 	appName := ""
 	var appNameError error = nil
 
-	informationBlockApp, informationBlockAppError := getMainInformationBlockApp(document, "appName")
+	informationBlockApp, informationBlockAppError := getMainInformationBlockApp(document, property)
 	if informationBlockAppError == nil {
 		headline := informationBlockApp.Find(h1, itemprop, itempropAppName)
 		if headline.Error == nil {
@@ -418,13 +395,13 @@ func getAppName(document soup.Root) (string, error) {
 			if headlineSpan.Error == nil {
 				appName = headlineSpan.Text()
 				if appName == "" {
-					appNameError = errors.New("appName : span inside of <h1 itemprop=\"" + itempropAppName + "\"></h1> is empty")
+					appNameError = errors.New(property + " : span inside of <h1 itemprop=\"" + itempropAppName + "\"></h1> is empty")
 				}
 			} else {
-				appNameError = errors.New("appName : there is no span inside of <h1 itemprop=\"" + itempropAppName + "\"></h1>")
+				appNameError = errors.New(property + " : there is no span inside of <h1 itemprop=\"" + itempropAppName + "\"></h1>")
 			}
 		} else {
-			appNameError = errors.New("appName : there is no <h1 itemprop=\"" + itempropAppName + "\"></h1>")
+			appNameError = errors.New(property + " : there is no <h1 itemprop=\"" + itempropAppName + "\"></h1>")
 		}
 	} else {
 		appNameError = informationBlockAppError
@@ -435,19 +412,20 @@ func getAppName(document soup.Root) (string, error) {
 
 // returns the category of the app
 func getCategory(document soup.Root) (string, error) {
+	property := "category"
 	category := ""
 	var categoryError error = nil
 
-	informationBlockApp, informationBlockAppError := getMainInformationBlockApp(document, "category")
+	informationBlockApp, informationBlockAppError := getMainInformationBlockApp(document, property)
 	if informationBlockAppError == nil {
 		categoryElement := informationBlockApp.Find(a, itemprop, itempropAppCategory)
 		if categoryElement.Error == nil {
 			category = categoryElement.Text()
 			if category == "" {
-				categoryError = errors.New("category : <a itemprop=\"" + itempropAppCategory + "\"></a> is empty")
+				categoryError = errors.New(property + " : <a itemprop=\"" + itempropAppCategory + "\"></a> is empty")
 			}
 		} else {
-			categoryError = errors.New("category : there is no <a itemprop=\"" + itempropAppCategory + "\"></a>")
+			categoryError = errors.New(property + " : there is no <a itemprop=\"" + itempropAppCategory + "\"></a>")
 		}
 	} else {
 		categoryError = informationBlockAppError
@@ -458,10 +436,11 @@ func getCategory(document soup.Root) (string, error) {
 
 // returns the USK of the app
 func getUsk(document soup.Root) (string, error) {
+	property := "usk"
 	usk := ""
 	var uskError error = nil
 
-	informationBlockApp, informationBlockAppError := getMainInformationBlockApp(document, "usk")
+	informationBlockApp, informationBlockAppError := getMainInformationBlockApp(document, property)
 	if informationBlockAppError == nil {
 		elementCategoryUsk := informationBlockApp.Find(div, class, classAppCategoryUsk)
 		if elementCategoryUsk.Error == nil {
@@ -472,16 +451,16 @@ func getUsk(document soup.Root) (string, error) {
 				if uskImage.Error == nil {
 					usk = uskImage.GetAttribute(alt)
 					if usk == "" {
-						uskError = errors.New("usk : the alt of the image of second child of <div class=\"" + classAppCategoryUsk + "\"></div> is empty")
+						uskError = errors.New(property + " : the alt of the image of second child of <div class=\"" + classAppCategoryUsk + "\"></div> is empty")
 					}
 				} else {
-					uskError = errors.New("usk : the second child of <div class=\"" + classAppCategoryUsk + "\"></div> should contain an image some levels lower")
+					uskError = errors.New(property + " : the second child of <div class=\"" + classAppCategoryUsk + "\"></div> should contain an image some levels lower")
 				}
 			} else {
-				uskError = errors.New("usk : there should be at least 2 children in <div class=\"" + classAppCategoryUsk + "\"></div>")
+				uskError = errors.New(property + " : there should be at least 2 children in <div class=\"" + classAppCategoryUsk + "\"></div>")
 			}
 		} else {
-			uskError = errors.New("usk : there is no <div class=\"" + classAppCategoryUsk + "\"></div> in main information block \"app\"")
+			uskError = errors.New(property + " : there is no <div class=\"" + classAppCategoryUsk + "\"></div> in main information block \"app\"")
 		}
 	} else {
 		uskError = informationBlockAppError
@@ -492,12 +471,13 @@ func getUsk(document soup.Root) (string, error) {
 
 // returns the marker (free or paid), the price of the app and the currency
 func getPrice(document soup.Root) (string, float64, string, error) {
+	property := "price"
 	var price string
 	var priceValue float64
 	var priceCurrency string
 	var priceError error = nil
 
-	informationBlockApp, informationBlockAppError := getMainInformationBlockApp(document, "price")
+	informationBlockApp, informationBlockAppError := getMainInformationBlockApp(document, property)
 	if informationBlockAppError == nil {
 		blockPrice := informationBlockApp.Find(meta, itemprop, itempropAppPrice)
 		if blockPrice.Error == nil {
@@ -525,10 +505,10 @@ func getPrice(document soup.Root) (string, float64, string, error) {
 					}
 				}
 			} else {
-				priceError = errors.New("price : <meta itemprop=\"" + itempropAppPrice + "\"></meta> should contain attribute \"" + content + "\"")
+				priceError = errors.New(property + " : <meta itemprop=\"" + itempropAppPrice + "\"></meta> should contain attribute \"" + content + "\"")
 			}
 		} else {
-			priceError = errors.New("price : there is no <meta itemprop=\"" + itempropAppPrice + "\"></meta> in main information block \"app\"")
+			priceError = errors.New(property + " : there is no <meta itemprop=\"" + itempropAppPrice + "\"></meta> in main information block \"app\"")
 		}
 	} else {
 		priceError = informationBlockAppError
