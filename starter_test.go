@@ -29,13 +29,7 @@ func TestMain(m *testing.M) {
 
 func setup() {
 	fmt.Println("--- --- setup")
-	setupRouter()
-}
-
-func setupRouter() {
-	router = mux.NewRouter()
-	// Insert
-	router.HandleFunc("/hitec/crawl/app-page/google-play/{package_name}", getAppPage).Methods("GET")
+	router = makeRouter()
 }
 
 func tearDown() {
