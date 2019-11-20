@@ -59,18 +59,23 @@ func TestGetAppPage(t *testing.T) {
 	/*
 	 * test for success CHECK 1
 	 */
-	endpointCheckOne := fmt.Sprintf(endpoint, "com.whatsapp")
-	req := buildRequest(method, endpointCheckOne, nil, t)
-	rr := executeRequest(req)
+	for _, appId := range []string{
+		"com.whatsapp",             // free
+		"com.ustwo.monumentvalley", // paid, contains in-app-purchases
+	} {
+		endpointCheckOne := fmt.Sprintf(endpoint, appId)
+		req := buildRequest(method, endpointCheckOne, nil, t)
+		rr := executeRequest(req)
 
-	//Confirm the response has the right status code
-	if status := rr.Code; status != http.StatusOK {
-		t.Errorf("Status code differs. Expected %d .\n Got %d instead", http.StatusOK, status)
-	}
+		//Confirm the response has the right status code
+		if status := rr.Code; status != http.StatusOK {
+			t.Errorf("Status code differs. Expected %d .\n Got %d instead", http.StatusOK, status)
+		}
 
-	var appPages AppPage
-	err := json.NewDecoder(rr.Body).Decode(&appPages)
-	if err != nil {
-		t.Errorf("Did not receive a proper formed json")
+		var appPages AppPage
+		err := json.NewDecoder(rr.Body).Decode(&appPages)
+		if err != nil {
+			t.Errorf("Did not receive a proper formed json")
+		}
 	}
 }
