@@ -68,12 +68,9 @@ func TestGetAppPage(t *testing.T) {
 		t.Errorf("Status code differs. Expected %d .\n Got %d instead", http.StatusOK, status)
 	}
 
-	var appPages []AppPage
+	var appPages AppPage
 	err := json.NewDecoder(rr.Body).Decode(&appPages)
 	if err != nil {
 		t.Errorf("Did not receive a proper formed json")
-	}
-	if len(appPages) != 0 {
-		t.Errorf("response length differs. Expected %d .\n Got %d instead", 0, len(appPages))
 	}
 }
