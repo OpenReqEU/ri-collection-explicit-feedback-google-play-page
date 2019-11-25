@@ -160,7 +160,7 @@ func TestGetStarsCount(t *testing.T) {
 		}
 	}
 }
-func TestCountPerRating(t *testing.T) {
+func TestGetCountPerRating(t *testing.T) {
 	for _, document := range []string{
 		mailformedHTML,
 	} {
@@ -170,7 +170,7 @@ func TestCountPerRating(t *testing.T) {
 		}
 	}
 }
-func TestDeveloperName(t *testing.T) {
+func TestGetDeveloperName(t *testing.T) {
 	for _, document := range []string{
 		mailformedHTML,
 	} {
@@ -180,11 +180,71 @@ func TestDeveloperName(t *testing.T) {
 		}
 	}
 }
-func TestTopDeveloper(t *testing.T) {
+func TestGetTopDeveloper(t *testing.T) {
 	for _, document := range []string{
 		mailformedHTML,
 	} {
 		_, error := getTopDeveloper(soup.HTMLParse(document))
+		if error == nil {
+			t.Errorf("should contain error")
+		}
+	}
+}
+func TestGetPrice(t *testing.T) {
+	for _, document := range []string{
+		mailformedHTML,
+	} {
+		_, _, _, error := getPrice(soup.HTMLParse(document))
+		if error == nil {
+			t.Errorf("should contain error")
+		}
+	}
+}
+func TestGetMainInformationBlockValidated(t *testing.T) {
+	for _, document := range []string{
+		mailformedHTML,
+	} {
+		_, error := getMainInformationBlockValidated(soup.HTMLParse(document), 0, "span", "")
+		if error == nil {
+			t.Errorf("should contain error")
+		}
+	}
+}
+func TestGetMainInformationBlockApp(t *testing.T) {
+	for _, document := range []string{
+		mailformedHTML,
+	} {
+		_, error := getMainInformationBlockApp(soup.HTMLParse(document), "span")
+		if error == nil {
+			t.Errorf("should contain error")
+		}
+	}
+}
+func TestGetMainInformationBlockAdditionalChildren(t *testing.T) {
+	for _, document := range []string{
+		mailformedHTML,
+	} {
+		_, error := getMainInformationBlockAdditionalChildren(soup.HTMLParse(document), "span")
+		if error == nil {
+			t.Errorf("should contain error")
+		}
+	}
+}
+func TestGetMainInformationBlockSimilarChildren(t *testing.T) {
+	for _, document := range []string{
+		mailformedHTML,
+	} {
+		_, error := getMainInformationBlockSimilarChildren(soup.HTMLParse(document), "span")
+		if error == nil {
+			t.Errorf("should contain error")
+		}
+	}
+}
+func TestGetMainInformationBlockAdditionalChild(t *testing.T) {
+	for _, document := range []string{
+		mailformedHTML,
+	} {
+		_, error := getMainInformationBlockAdditionalChild(soup.HTMLParse(document), "span", 0)
 		if error == nil {
 			t.Errorf("should contain error")
 		}
