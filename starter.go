@@ -12,9 +12,13 @@ const (
 )
 
 func main() {
+	log.Fatal(http.ListenAndServe(":9622", makeRouter()))
+}
+
+func makeRouter() *mux.Router {
 	router := mux.NewRouter()
 	router.HandleFunc("/hitec/crawl/app-page/google-play/{package_name}", getAppPage).Methods("GET")
-	log.Fatal(http.ListenAndServe(":9622", router))
+	return router
 }
 
 func recoverAPICall(w http.ResponseWriter, page AppPage) {

@@ -29,13 +29,7 @@ func TestMain(m *testing.M) {
 
 func setup() {
 	fmt.Println("--- --- setup")
-	setupRouter()
-}
-
-func setupRouter() {
-	router = mux.NewRouter()
-	// Insert
-	router.HandleFunc("/hitec/crawl/app-page/google-play/{package_name}", getAppPage).Methods("GET")
+	router = makeRouter()
 }
 
 func tearDown() {
@@ -65,21 +59,23 @@ func TestGetAppPage(t *testing.T) {
 	/*
 	 * test for success CHECK 1
 	 */
-	endpointCheckOne := fmt.Sprintf(endpoint, "com.whatsapp")
-	req := buildRequest(method, endpointCheckOne, nil, t)
-	rr := executeRequest(req)
+	for _, appId := range []string{
+		"com.whatsapp",             // free
+		"com.ustwo.monumentvalley", // paid, contains in-app-purchases
+	} {
+		endpointCheckOne := fmt.Sprintf(endpoint, appId)
+		req := buildRequest(method, endpointCheckOne, nil, t)
+		rr := executeRequest(req)
 
-	//Confirm the response has the right status code
-	if status := rr.Code; status != http.StatusOK {
-		t.Errorf("Status code differs. Expected %d .\n Got %d instead", http.StatusOK, status)
-	}
+		//Confirm the response has the right status code
+		if status := rr.Code; status != http.StatusOK {
+			t.Errorf("Status code differs. Expected %d .\n Got %d instead", http.StatusOK, status)
+		}
 
-	var appPages []AppPage
-	err := json.NewDecoder(rr.Body).Decode(&appPages)
-	if err != nil {
-		t.Errorf("Did not receive a proper formed json")
-	}
-	if len(appPages) != 0 {
-		t.Errorf("response length differs. Expected %d .\n Got %d instead", 0, len(appPages))
+		var appPages AppPage
+		err := json.NewDecoder(rr.Body).Decode(&appPages)
+		if err != nil {
+			t.Errorf("Did not receive a proper formed json")
+		}
 	}
 }
