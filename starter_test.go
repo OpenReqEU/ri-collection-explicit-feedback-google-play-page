@@ -9,6 +9,7 @@ import (
 	"os"
 	"testing"
 
+	"github.com/OlegSchmidt/soup"
 	"github.com/gorilla/mux"
 )
 
@@ -52,7 +53,7 @@ func executeRequest(req *http.Request) *httptest.ResponseRecorder {
 	return rr
 }
 func TestGetAppPage(t *testing.T) {
-	fmt.Println("start TestGetAppReviewsOfClass")
+	fmt.Println("start TestGetAppPage")
 	var method = "GET"
 	var endpoint = "/hitec/crawl/app-page/google-play/%s"
 
@@ -62,6 +63,7 @@ func TestGetAppPage(t *testing.T) {
 	for _, appId := range []string{
 		"com.whatsapp",             // free
 		"com.ustwo.monumentvalley", // paid, contains in-app-purchases
+		"com.does.not.exists.122",  // does not exist
 	} {
 		endpointCheckOne := fmt.Sprintf(endpoint, appId)
 		req := buildRequest(method, endpointCheckOne, nil, t)
@@ -76,6 +78,115 @@ func TestGetAppPage(t *testing.T) {
 		err := json.NewDecoder(rr.Body).Decode(&appPages)
 		if err != nil {
 			t.Errorf("Did not receive a proper formed json")
+		}
+	}
+}
+
+var mailformedHTML = `
+<html>
+  <head>
+    <title>Sample "Hello, World" Application</title>
+  </head>
+<html>
+`
+
+func TestGetRating(t *testing.T) {
+	for _, document := range []string{
+		mailformedHTML,
+	} {
+		_, error := getRating(soup.HTMLParse(document))
+		if error == nil {
+			t.Errorf("should contain error")
+		}
+	}
+}
+func TestGetAppName(t *testing.T) {
+	for _, document := range []string{
+		mailformedHTML,
+	} {
+		_, error := getAppName(soup.HTMLParse(document))
+		if error == nil {
+			t.Errorf("should contain error")
+		}
+	}
+}
+func TestGetCategory(t *testing.T) {
+	for _, document := range []string{
+		mailformedHTML,
+	} {
+		_, error := getCategory(soup.HTMLParse(document))
+		if error == nil {
+			t.Errorf("should contain error")
+		}
+	}
+}
+func TestGetUsk(t *testing.T) {
+	for _, document := range []string{
+		mailformedHTML,
+	} {
+		_, error := getUsk(soup.HTMLParse(document))
+		if error == nil {
+			t.Errorf("should contain error")
+		}
+	}
+}
+func TestGetDescription(t *testing.T) {
+	for _, document := range []string{
+		mailformedHTML,
+	} {
+		_, error := getDescription(soup.HTMLParse(document))
+		if error == nil {
+			t.Errorf("should contain error")
+		}
+	}
+}
+func TestGetWhatsNew(t *testing.T) {
+	for _, document := range []string{
+		mailformedHTML,
+	} {
+		_, error := getWhatsNew(soup.HTMLParse(document))
+		if error == nil {
+			t.Errorf("should contain error")
+		}
+	}
+}
+func TestGetStarsCount(t *testing.T) {
+	for _, document := range []string{
+		mailformedHTML,
+	} {
+		_, error := getStarsCount(soup.HTMLParse(document))
+		if error == nil {
+			t.Errorf("should contain error")
+		}
+	}
+}
+func TestCountPerRating(t *testing.T) {
+	for _, document := range []string{
+		mailformedHTML,
+	} {
+		_, error := getCountPerRating(soup.HTMLParse(document))
+		if error == nil {
+			t.Errorf("should contain error")
+		}
+	}
+}
+func TestDeveloperName(t *testing.T) {
+	for _, document := range []string{
+		mailformedHTML,
+	} {
+		_, error := getCountPerRating(soup.HTMLParse(document))
+		if error == nil {
+			t.Errorf("should contain error")
+		}
+	}
+}
+func TestTopDeveloper(t *testing.T) {
+	for _, document := range []string{
+		mailformedHTML,
+	} {
+		_, error := getTopDeveloper(soup.HTMLParse(document))
+		if error == nil {
+			t.Errorf("should contain error")
 		}
 	}
 }
